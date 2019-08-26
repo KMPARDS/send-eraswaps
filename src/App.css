@@ -16,11 +16,51 @@
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
+  font-family: 'Share Tech Mono', monospace;
   color: white;
 }
 
 .App-link {
   color: #61dafb;
+}
+
+.button-reward, .button-liquid, .csv-input-button, .dayswappers-button {
+  margin: .2rem;
+  padding: .6rem;
+  border-radius: .5rem;
+  background-color: transparent;
+  color: white;
+  font-size: .85rem;
+  outline-width: 0;
+  cursor: 'pointer';
+}
+
+.csv-input-button:hover {
+  background-color: #84cb2f;
+  text-shadow: 0 0 4px #000;
+  box-shadow: 0 0 10px #84cb2f;
+}
+
+.dayswappers-button:hover {
+  background-color: #f27676;
+  text-shadow: 0 0 4px #000;
+  box-shadow: 0 0 10px #f27676;
+}
+
+.button-reward:hover {
+  background-color: #da8adf;
+  text-shadow: 0 0 4px #000;
+  box-shadow: 0 0 10px #da8adf;
+}
+
+.button-liquid:hover {
+  background-color: #4ec0db;
+  text-shadow: 0 0 4px #000;
+  box-shadow: 0 0 10px #4ec0db;
+}
+
+.csv-reader-input {
+  display:none;
 }
 
 @keyframes App-logo-spin {
