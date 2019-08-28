@@ -2,8 +2,6 @@ const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
 
-const { getPlatformDetails } = require('./dashboard');
-
 const app = express();
 
 app.use(helmet());
