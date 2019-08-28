@@ -71,7 +71,7 @@ class SendTokensCSV extends Component {
         this.props.type !== 'dayswappers'
         ? (
           this.state.half
-            ? this.props.amountArray.div(2)
+            ? this.props.amountArray.map(address => address.div(2))
             : this.props.amountArray
           )
         : (type === 'liquid'
