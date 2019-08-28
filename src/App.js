@@ -5,6 +5,8 @@ import SendTokensCSV from './components/SendTokensCSV/SendTokensCSV';
 import './App.css';
 
 const ethers = require('ethers');
+window.Web3js = require('web3');
+
 const { esContract, timeally, batchSendTokens } = require('./env');
 
 window.pleaseStopFor = duration => new Promise(function(resolve, reject) {
@@ -29,27 +31,44 @@ class App extends Component {
 
   componentDidMount = async() => {
     if(window.ethereum) {
+      console.log('Metamask found');
+      window.web3js = new window.Web3js(window.ethereum);
       await window.ethereum.enable();
-      console.log(window.web3.currentProvider);
-      const provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
-      console.log('provider', provider)
-      window.wallet = provider.getSigner();
+      console.log('Metamask is enabled');
+      console.log(window.web3js);
+      // const provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
+      // console.log('provider', provider)
+      // window.wallet = provider.getSigner();
       // console.log(wiwallet);
-      window.esInstance = new ethers.Contract(
-        esContract.address,
-        esContract.abi,
-        window.wallet
-      );
-      window.timeallyInstance = new ethers.Contract(
-        timeally.address,
-        timeally.abi,
-        window.wallet
-      );
-      window.batchInstance = new ethers.Contract(
-        batchSendTokens.address,
-        batchSendTokens.abi,
-        window.wallet
-      );
+      window.esInstance =
+      // new ethers.Contract(
+      //   esContract.address,
+      //   esContract.abi,
+      //   window.wallet
+      // );
+      new window.web3js.eth.Contract(esContract.abi, esContract.address);
+
+      window.timeallyInstance =
+      // new ethers.Contract(
+      //   timeally.address,
+      //   timeally.abi,
+      //   window.wallet
+      // );
+      new window.web3js.eth.Contract(timeally.abi, timeally.address);
+
+      window.batchInstance =
+      // new ethers.Contract(
+      //   batchSendTokens.address,
+      //   batchSendTokens.abi,
+      //   window.wallet
+      // );
+      new window.web3js.eth.Contract(batchSendTokens.abi, batchSendTokens.address);
+      console.log('Contract instances created');
+      const accounts = await window.web3js.eth.getAccounts();
+      window.userAddress = accounts[0];
+      console.log('Done');
+    } else {
+      console.log('Metamask is not there');
     }
   }
 
@@ -77,7 +96,7 @@ class App extends Component {
         addressArray.push(address);
         amountArray.push(amount);
       } else {
-        console.log(indexOfAddress, amountArray[indexOfAddress]);
+        // console.log(indexOfAddress, amountArray[indexOfAddress]);
         amountArray[indexOfAddress] = amountArray[indexOfAddress].add(amount);
       }
     }
@@ -112,7 +131,7 @@ class App extends Component {
               const addressArray = [], liquidArray = [], stakeArray = [];
               response.data.forEach(obj => {
                 if(obj.liquid_reward || obj.my_reward) {
-                  console.log(obj.liquid_reward, String(obj.liquid_reward));
+                  // console.log(obj.liquid_reward, String(obj.liquid_reward));
                   const indexOf = addressArray.indexOf(obj.ethereum_address);
                   if(indexOf === -1) {
                     addressArray.push(obj.ethereum_address);

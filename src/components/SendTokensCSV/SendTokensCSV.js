@@ -19,14 +19,14 @@ class SendTokensCSV extends Component {
   componentDidMount = async() => {
     window.ethers = ethers;
     window.soham = this.props;
-    this.showTheseEntries();
+    this.showTheseEntries(true);
   };
 
-  showTheseEntries = async() => {
+  showTheseEntries = async(onlyShow) => {
     await this.setState({
       startSrNumber: +this.state.startSr,
       endSrNumber: +this.state.endSr,
-      showSpecific: true
+      showSpecific: !onlyShow
     });
     let firstTotal = ethers.utils.bigNumberify(0);
     this.props.amountArray.slice((this.state.startSrNumber-1)||0, this.state.endSrNumber||(this.props.amountArray.length-1)).forEach(amount => {
@@ -60,7 +60,7 @@ class SendTokensCSV extends Component {
         this.props.type !== 'dayswappers'
         ? (
           this.state.half
-            ? this.props.amountArray.slice(this.state.startSrNumber-1, this.state.endSrNumber).div(2)
+            ? this.props.amountArray.slice(this.state.startSrNumber-1, this.state.endSrNumber).map(address => address.div(2))
             : this.props.amountArray.slice(this.state.startSrNumber-1, this.state.endSrNumber)
           )
         : (type === 'liquid'
@@ -95,12 +95,12 @@ class SendTokensCSV extends Component {
       console.log('preparing to send to', address, ethers.utils.formatEther(tokenArrayFinal[index]));
     });
 
-    window.tx = window.batchInstance.functions.sendTokensByDifferentAmount(
-      window.esInstance.address,
+    window.tx = window.batchInstance.methods.sendTokensByDifferentAmount(
+      window.esInstance.options.address,
       sendingAddressesFinal,
       tokenArrayFinal,
       sum
-    );
+    ).send({from: window.userAddress});
 
     this.setState({ metamaskSending: '' });
   };
@@ -216,7 +216,7 @@ class SendTokensCSV extends Component {
           <input type="text" placeholder="Enter Start Sr" onKeyUp={event => this.setState({ startSr: event.target.value })} />
           <input type="text" placeholder="Enter End Sr" onKeyUp={event => this.setState({ endSr: event.target.value })} />
           <br />
-          <button onClick={this.showTheseEntries}>Show These Entries</button>
+          <button onClick={() => this.showTheseEntries()}>Show These Entries</button>
         </div>
         <div style={{ marginTop: '.5rem' }}>
           <button
