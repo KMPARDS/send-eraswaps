@@ -2,23 +2,6 @@ const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
 
-//kES0hO1HLqc7uQUdhRaYKwKoUftPTdmP
-
-var redis = require("redis");
-    client = redis.createClient(6379);
-
-// let cache = require('express-redis-cache')({
-//   host: 'redis-12649.c17.us-east-1-4.ec2.cloud.redislabs.com',
-//   port: 12649,
-//   auth_pass: 'kES0hO1HLqc7uQUdhRaYKwKoUftPTdmP',
-//   expire: 60
-// });
-
-client.on('connect', () => {
-  console.log(`connected to redis`);
-  // cache = require('express-redis-cache')({ expire: 60 });
-});
-
 const { getPlatformDetails } = require('./dashboard');
 
 const app = express();
