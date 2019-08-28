@@ -5,6 +5,7 @@ import SendTokensCSV from './components/SendTokensCSV/SendTokensCSV';
 import './App.css';
 
 const ethers = require('ethers');
+const { esContract, timeally, batchSendTokens } = require('./env');
 
 window.pleaseStopFor = duration => new Promise(function(resolve, reject) {
   setTimeout(() => resolve(), duration);
@@ -25,6 +26,32 @@ class App extends Component {
     liquidArray: [],
     stakeArray: []
   };
+
+  componentDidMount = async() => {
+    if(window.ethereum) {
+      await window.ethereum.enable();
+      console.log(window.web3.currentProvider);
+      const provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
+      console.log('provider', provider)
+      window.wallet = provider.getSigner();
+      // console.log(wiwallet);
+      window.esInstance = new ethers.Contract(
+        esContract.address,
+        esContract.abi,
+        window.wallet
+      );
+      window.timeallyInstance = new ethers.Contract(
+        timeally.address,
+        timeally.abi,
+        window.wallet
+      );
+      window.batchInstance = new ethers.Contract(
+        batchSendTokens.address,
+        batchSendTokens.abi,
+        window.wallet
+      );
+    }
+  }
 
   onFileLoaded = async output => {
     this.setState({ numberOfFiles: this.state.numberOfFiles + 1, loading: true })
@@ -76,7 +103,9 @@ class App extends Component {
               onError={this.handleDarkSideForce}
             />
             <span style={{margin: '10px'}}>Or</span>
-            <button className="dayswappers-button" onClick={async() => {
+            <button className="dayswappers-button"
+              disabled={this.state.loadingFromDaySwappers}
+              onClick={async() => {
               this.setState({ loadingFromDaySwappers: true });
               const response = await axios.get('https://apis.dayswappers.com/graph/rewards');
               console.log('dayswappers response', response);

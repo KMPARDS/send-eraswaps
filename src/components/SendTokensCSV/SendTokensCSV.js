@@ -6,17 +6,104 @@ const ethers = require('ethers');
 class SendTokensCSV extends Component {
   state = {
     half: true,
-    startSr: '',
-    endSr: '',
+    startSr: '1',
+    endSr: String(this.props.addressArray.length),
     startSrNumber: 0,
     endSrNumber: 0,
-    showSpecific: false
-  }
+    firstTotal: '',
+    secondTotal: '',
+    showSpecific: false,
+    metamaskSending: ''
+  };
 
-  componentDidMount = () => {
+  componentDidMount = async() => {
     window.ethers = ethers;
     window.soham = this.props;
-  }
+    this.showTheseEntries();
+  };
+
+  showTheseEntries = async() => {
+    await this.setState({
+      startSrNumber: +this.state.startSr,
+      endSrNumber: +this.state.endSr,
+      showSpecific: true
+    });
+    let firstTotal = ethers.utils.bigNumberify(0);
+    this.props.amountArray.slice((this.state.startSrNumber-1)||0, this.state.endSrNumber||(this.props.amountArray.length-1)).forEach(amount => {
+      firstTotal = firstTotal.add(amount);
+    });
+    let secondTotal = ethers.utils.bigNumberify(0);
+    // console.log(this.props.type, 'dayswappers', this.props.type !== 'dayswappers');
+    if(this.props.type === 'dayswappers') {
+      this.props.stakeArray.slice((this.state.startSrNumber-1)||0, this.state.endSrNumber||(this.props.stakeArray.length-1)).forEach(amount => {
+        secondTotal = secondTotal.add(amount);
+      });
+    } else {
+      secondTotal = firstTotal.div(2);
+    }
+    this.setState({
+      firstTotal: ethers.utils.formatEther(firstTotal) + ' ES',
+      secondTotal: ethers.utils.formatEther(secondTotal) + ' ES'
+    });
+  };
+
+  sendToMetamask = async type => {
+    await this.setState({ metamaskSending: type });
+    console.log('sendToMetamask', type);
+    const sendingAddressesDraft =
+      this.state.showSpecific
+      ? this.props.addressArray.slice(this.state.startSrNumber-1, this.state.endSrNumber)
+      : this.props.addressArray;
+    const tokenArrayDraft =
+      this.state.showSpecific
+      ? (
+        this.props.type !== 'dayswappers'
+        ? (
+          this.state.half
+            ? this.props.amountArray.slice(this.state.startSrNumber-1, this.state.endSrNumber).div(2)
+            : this.props.amountArray.slice(this.state.startSrNumber-1, this.state.endSrNumber)
+          )
+        : (type === 'liquid'
+            ? this.props.amountArray
+            : this.props.stakeArray).slice(this.state.startSrNumber-1, this.state.endSrNumber)
+      )
+      : (
+        this.props.type !== 'dayswappers'
+        ? (
+          this.state.half
+            ? this.props.amountArray.div(2)
+            : this.props.amountArray
+          )
+        : (type === 'liquid'
+            ? this.props.amountArray
+            : this.props.stakeArray)
+      );
+    // console.log(sendingAddressesDraft, tokenArrayDraft);
+    const sendingAddressesFinal = [];
+    const tokenArrayFinal = [];
+    let sum = ethers.utils.bigNumberify(0);
+    /// @dev removing addresses which have 0 tokens to send coz including stuff in data field costs gas
+    sendingAddressesDraft.forEach((address, index) => {
+      if(!tokenArrayDraft[index].eq(0)) {
+        sendingAddressesFinal.push(address);
+        tokenArrayFinal.push(tokenArrayDraft[index]);
+        sum = sum.add(tokenArrayDraft[index]);
+      }
+    });
+
+    sendingAddressesFinal.forEach((address, index) => {
+      console.log('preparing to send to', address, ethers.utils.formatEther(tokenArrayFinal[index]));
+    });
+
+    window.tx = window.batchInstance.functions.sendTokensByDifferentAmount(
+      window.esInstance.address,
+      sendingAddressesFinal,
+      tokenArrayFinal,
+      sum
+    );
+
+    this.setState({ metamaskSending: '' });
+  };
 
   render = () => {
     const themeColor = this.props.type === 'dayswappers'
@@ -53,6 +140,7 @@ class SendTokensCSV extends Component {
               >Full
             </span>
           }</p> : <br />}
+          <p>Showing {this.state.startSr}-{this.state.endSr} of {this.props.addressArray.length}</p>
         <table>
           <thead>
             <tr>
@@ -114,16 +202,30 @@ class SendTokensCSV extends Component {
               )
             })}
             </> : null}
+            <tr>
+              <td></td>
+              <td></td>
+              <td style={{ textAlign: 'right', backgroundColor: this.props.type === 'dayswappers' ? colorLiquid + '66' : undefined
+              }}>{this.state.firstTotal}</td>
+              <td style={{textAlign: 'right', backgroundColor: this.props.type === 'dayswappers'
+              ? colorTimeAlly + '66' : themeColor + '66'}}>{this.state.secondTotal}</td>
+            </tr>
           </tbody>
         </table>
         <div style={{ marginTop: '.5rem' }}>
           <input type="text" placeholder="Enter Start Sr" onKeyUp={event => this.setState({ startSr: event.target.value })} />
           <input type="text" placeholder="Enter End Sr" onKeyUp={event => this.setState({ endSr: event.target.value })} />
           <br />
-          <button onClick={() => this.setState({
-              startSrNumber: +this.state.startSr,
-              endSrNumber: +this.state.endSr,
-              showSpecific: true })}>Show These Entries</button>
+          <button onClick={this.showTheseEntries}>Show These Entries</button>
+        </div>
+        <div style={{ marginTop: '.5rem' }}>
+          <button
+            className="button-liquid"
+            onClick={() => this.sendToMetamask('liquid')}>{this.state.metamaskSending === 'liquid' ? 'Open Metamask...' : 'Send Liquid'}</button>
+          <button
+            className="button-reward"
+            onClick={() => this.sendToMetamask('timeally')}>{this.state.metamaskSending === 'timeally' ? 'Open Metamask...' : 'Send TimeAlly'}</button>
+          <br />
         </div>
       </>
     );
