@@ -36,33 +36,33 @@ class App extends Component {
       await window.ethereum.enable();
       console.log('Metamask is enabled');
       console.log(window.web3js);
-      // const provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
-      // console.log('provider', provider)
-      // window.wallet = provider.getSigner();
+      const provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
+      console.log('provider', provider)
+      window.wallet = provider.getSigner();
       // console.log(wiwallet);
       window.esInstance =
-      // new ethers.Contract(
-      //   esContract.address,
-      //   esContract.abi,
-      //   window.wallet
-      // );
-      new window.web3js.eth.Contract(esContract.abi, esContract.address);
+      new ethers.Contract(
+        esContract.address,
+        esContract.abi,
+        window.wallet
+      );
+      // new window.web3js.eth.Contract(esContract.abi, esContract.address);
 
       window.timeallyInstance =
-      // new ethers.Contract(
-      //   timeally.address,
-      //   timeally.abi,
-      //   window.wallet
-      // );
-      new window.web3js.eth.Contract(timeally.abi, timeally.address);
+      new ethers.Contract(
+        timeally.address,
+        timeally.abi,
+        window.wallet
+      );
+      // new window.web3js.eth.Contract(timeally.abi, timeally.address);
 
       window.batchInstance =
-      // new ethers.Contract(
-      //   batchSendTokens.address,
-      //   batchSendTokens.abi,
-      //   window.wallet
-      // );
-      new window.web3js.eth.Contract(batchSendTokens.abi, batchSendTokens.address);
+      new ethers.Contract(
+        batchSendTokens.address,
+        batchSendTokens.abi,
+        window.wallet
+      );
+      // new window.web3js.eth.Contract(batchSendTokens.abi, batchSendTokens.address);
       console.log('Contract instances created');
       const accounts = await window.web3js.eth.getAccounts();
       window.userAddress = accounts[0];

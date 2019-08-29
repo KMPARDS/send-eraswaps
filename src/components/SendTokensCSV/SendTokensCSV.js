@@ -105,12 +105,19 @@ class SendTokensCSV extends Component {
       console.log('preparing to send to', address, ethers.utils.formatEther(tokenArrayFinal[index]));
     });
 
-    window.tx = window.batchInstance.methods.sendTokensByDifferentAmount(
-      window.esInstance.options.address,
+    // window.tx = window.batchInstance.methods.sendTokensByDifferentAmount(
+    //   window.esInstance.options.address,
+    //   sendingAddressesFinal,
+    //   tokenArrayFinal,
+    //   sum
+    // ).send({from: window.userAddress});
+
+    window.tx = window.batchInstance.sendTokensByDifferentAmount(
+      window.esInstance.address,
       sendingAddressesFinal,
       tokenArrayFinal,
       sum
-    ).send({from: window.userAddress});
+    );
 
     this.setState({ metamaskSending: '' });
   };
