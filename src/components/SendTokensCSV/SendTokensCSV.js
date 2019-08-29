@@ -16,14 +16,45 @@ class SendTokensCSV extends Component {
     metamaskSending: '',
     nothingToShow: false,
     changedInputSr: false,
-    bulkAllowance: 'Loading...'
+    bulkAllowance: 'Checking...',
+    approveScreen: false,
+    userApproveTxAmount: {},
+    timeallyBalance: 'Checking...',
+    topupScreen: false,
+    userTopupAmount: {}
   };
 
   componentDidMount = async() => {
     window.ethers = ethers;
     window.soham = this.props;
-    this.showTheseEntries(true);
-    this.esInstance.functions.allowance()
+    await this.showTheseEntries(true);
+
+    (async() => {
+      const bulkAllowance = await window.esInstance.functions.allowance(
+          window.userAddress,
+          window.batchInstance.address
+        );
+      this.setState({
+        bulkAllowance: ethers.utils.formatEther(bulkAllowance) + ' ES',
+        approveScreen: bulkAllowance.lt(
+          this.props.type === 'dayswappers'
+            ? ethers.utils.parseEther(this.state.firstTotal.split(' ')[0])
+            : ethers.utils.parseEther(this.state.secondTotal.split(' ')[0])
+        )
+      });
+    })();
+
+    (async() => {
+      const timeallyBalance = await window.timeallyInstance.functions.launchReward(
+        window.userAddress
+      );
+      this.setState({
+        timeallyBalance: ethers.utils.formatEther(timeallyBalance) + ' ES',
+        topupScreen: timeallyBalance.lt(
+          ethers.utils.parseEther(this.state.secondTotal.split(' ')[0])
+        )
+      });
+    })();
   };
 
   showTheseEntries = async(onlyShow) => {
@@ -53,7 +84,12 @@ class SendTokensCSV extends Component {
       firstTotal: ethers.utils.formatEther(firstTotal) + ' ES',
       secondTotal: ethers.utils.formatEther(secondTotal) + ' ES',
       nothingToShow,
-      changedInputSr: false
+      changedInputSr: false,
+      approveScreen: ethers.utils.parseEther(this.state.bulkAllowance === 'Checking...' ? '0' : this.state.bulkAllowance.split(' ')[0])
+        .lt(this.props.type === 'dayswappers' ? firstTotal : secondTotal),
+      topupScreen: ethers.utils.parseEther(
+        this.state.timeallyBalance === 'Checking...' ? '0' : this.state.timeallyBalance.split(' ')[0]
+      ).lt(secondTotal)
     });
   };
 
@@ -112,13 +148,19 @@ class SendTokensCSV extends Component {
     //   sum
     // ).send({from: window.userAddress});
 
-    window.tx = window.batchInstance.sendTokensByDifferentAmount(
-      window.esInstance.address,
-      sendingAddressesFinal,
-      tokenArrayFinal,
-      sum
-    );
-
+    if(type === 'liquid') {
+      window.tx = window.batchInstance.sendTokensByDifferentAmount(
+        window.esInstance.address,
+        sendingAddressesFinal,
+        tokenArrayFinal,
+        sum
+      );
+    } else {
+      window.tx = window.timeallyInstance.functions.giveLaunchReward(
+        sendingAddressesFinal,
+        tokenArrayFinal
+      );
+    }
     this.setState({ metamaskSending: '' });
   };
 
@@ -240,15 +282,77 @@ class SendTokensCSV extends Component {
         {this.state.changedInputSr ? 'Click on show to send tokens' : <div style={{ marginTop: '.5rem' }}>
           {['dayswappers', 'liquid'].includes(this.props.type) ?
           <>
-            Allowance to BatchSendTokens(0x4D...): {this.state.bulkAllowance}
+            <p style={{marginBottom: '0'}}>Allowance to BatchSendTokens(0x4D...): {this.state.bulkAllowance}</p>
+            {this.state.approveScreen && this.state.bulkAllowance !== 'Checking'
+            ? <>
+              <input type="text" onKeyUp={event => this.setState({ userApproveTxAmount: event.target.value })} placeholder="Enter ES to approve" />
+              <button onClick={async() => {
+                const tx = await window.esInstance.functions.approve(
+                  window.batchInstance.address,
+                  ethers.utils.parseEther(this.state.userApproveTxAmount)
+                );
+                await tx.wait();
+                //update allowance
+                this.setState({bulkAllowance: 'Checking...'});
+                const bulkAllowance = await window.esInstance.functions.allowance(
+                    window.userAddress,
+                    window.batchInstance.address
+                  );
+                this.setState({bulkAllowance: ethers.utils.formatEther(bulkAllowance) + ' ES'});
+              }}>
+                Approve BatchSendTokens
+              </button>
+            </> : null}
+            <br />
             <button
               className="button-liquid"
-              onClick={() => this.sendToMetamask('liquid')}>{this.state.metamaskSending === 'liquid' ? 'Open Metamask...' : 'Send Liquid'}
+              style={{margin: '20px'}}
+              onClick={() => this.sendToMetamask('liquid')}
+            >
+              {this.state.metamaskSending === 'liquid' ? 'Open Metamask...' : 'Send Liquid'}
             </button>
           </>: null}
-          {['dayswappers', 'timeally'].includes(this.props.type) ? <button
-            className="button-reward"
-            onClick={() => this.sendToMetamask('timeally')}>{this.state.metamaskSending === 'timeally' ? 'Open Metamask...' : 'Send TimeAlly'}</button> : null}
+          {['dayswappers', 'timeally'].includes(this.props.type) ?
+          (window.userAddress.toLowerCase() === '0xC8e1F3B9a0CdFceF9fFd2343B943989A22517b26'.toLowerCase() ? <>
+            <p style={{marginBottom: '0'}}>TimeAlly Balance: {this.state.timeallyBalance}</p>
+            {this.state.topupScreen && this.state.timeallyBalance !== 'Checking...'
+            ? <>
+              <input type="text" onKeyUp={event => this.setState({ userTopupAmount: event.target.value })} placeholder="Enter ES" />
+              <button onClick={async() => {
+                console.log('timeally allowance started...');
+                const tx = await window.esInstance.functions.approve(
+                  window.timeallyInstance.address,
+                  ethers.utils.parseEther(this.state.userTopupAmount)
+                );
+                await tx.wait();
+                console.log('timeally allowance done');
+              }}>
+                Approve TimeAlly
+              </button>
+              <button onClick={async() => {
+                const tx = await window.timeallyInstance.functions.topupRewardBucket(
+                  ethers.utils.parseEther(this.state.userTopupAmount)
+                );
+                await tx.wait();
+                //update allowance
+                this.setState({timeallyBalance: 'Checking...'});
+                const timeallyBalance = await window.timeallyInstance.functions.launchReward(
+                    window.userAddress
+                  );
+                this.setState({timeallyBalance: ethers.utils.formatEther(timeallyBalance) + ' ES'});
+              }}>
+                Topup TimeAlly Rewards Balance
+              </button>
+            </> : null}
+            <br />
+            <button
+              style={{margin:'20px'}}
+              className="button-reward"
+              onClick={() => this.sendToMetamask('timeally')}
+            >
+              {this.state.metamaskSending === 'timeally' ? 'Open Metamask...' : 'Send TimeAlly'}
+            </button>
+          </> : 'Current Metamask address is not deployer of TimeAlly') : null}
           <br />
         </div>}
       </>

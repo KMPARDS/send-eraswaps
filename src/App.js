@@ -36,9 +36,9 @@ class App extends Component {
       await window.ethereum.enable();
       console.log('Metamask is enabled');
       console.log(window.web3js);
-      const provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
-      console.log('provider', provider)
-      window.wallet = provider.getSigner();
+      window.provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
+      console.log('provider', window.provider)
+      window.wallet = window.provider.getSigner();
       // console.log(wiwallet);
       window.esInstance =
       new ethers.Contract(
@@ -64,8 +64,12 @@ class App extends Component {
       );
       // new window.web3js.eth.Contract(batchSendTokens.abi, batchSendTokens.address);
       console.log('Contract instances created');
-      const accounts = await window.web3js.eth.getAccounts();
-      window.userAddress = accounts[0];
+
+      setInterval(async() => {
+        const accounts = await window.web3js.eth.getAccounts();
+        window.userAddress = accounts[0];
+      }, 2000);
+      
       console.log('Done');
     } else {
       console.log('Metamask is not there');
