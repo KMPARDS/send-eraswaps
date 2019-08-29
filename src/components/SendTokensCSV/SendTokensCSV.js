@@ -13,13 +13,17 @@ class SendTokensCSV extends Component {
     firstTotal: '',
     secondTotal: '',
     showSpecific: false,
-    metamaskSending: ''
+    metamaskSending: '',
+    nothingToShow: false,
+    changedInputSr: false,
+    bulkAllowance: 'Loading...'
   };
 
   componentDidMount = async() => {
     window.ethers = ethers;
     window.soham = this.props;
     this.showTheseEntries(true);
+    this.esInstance.functions.allowance()
   };
 
   showTheseEntries = async(onlyShow) => {
@@ -41,9 +45,15 @@ class SendTokensCSV extends Component {
     } else {
       secondTotal = firstTotal.div(2);
     }
+
+    let nothingToShow = false;
+    if(!this.props.amountArray.slice((this.state.startSrNumber-1)||0, this.state.endSrNumber||(this.props.amountArray.length-1)).length) nothingToShow = true;
+
     this.setState({
       firstTotal: ethers.utils.formatEther(firstTotal) + ' ES',
-      secondTotal: ethers.utils.formatEther(secondTotal) + ' ES'
+      secondTotal: ethers.utils.formatEther(secondTotal) + ' ES',
+      nothingToShow,
+      changedInputSr: false
     });
   };
 
@@ -140,7 +150,8 @@ class SendTokensCSV extends Component {
               >Full
             </span>
           }</p> : <br />}
-          <p>Showing {this.state.startSr}-{this.state.endSr} of {this.props.addressArray.length}</p>
+        {this.state.nothingToShow ? <p>I ain't got no stuff to show</p> : <>
+        <p>Showing {this.state.startSrNumber}-{this.state.endSrNumber} of {this.props.addressArray.length}</p>
         <table>
           <thead>
             <tr>
@@ -212,21 +223,27 @@ class SendTokensCSV extends Component {
             </tr>
           </tbody>
         </table>
+        </>}
         <div style={{ marginTop: '.5rem' }}>
-          <input type="text" placeholder="Enter Start Sr" onKeyUp={event => this.setState({ startSr: event.target.value })} />
-          <input type="text" placeholder="Enter End Sr" onKeyUp={event => this.setState({ endSr: event.target.value })} />
+          <input type="text" placeholder="Enter Start Sr" onKeyUp={event => this.setState({ startSr: event.target.value, changedInputSr: true })} />
+          <input type="text" placeholder="Enter End Sr" onKeyUp={event => this.setState({ endSr: event.target.value, changedInputSr: true })} />
           <br />
           <button onClick={() => this.showTheseEntries()}>Show These Entries</button>
         </div>
-        <div style={{ marginTop: '.5rem' }}>
-          <button
-            className="button-liquid"
-            onClick={() => this.sendToMetamask('liquid')}>{this.state.metamaskSending === 'liquid' ? 'Open Metamask...' : 'Send Liquid'}</button>
-          <button
+        {this.state.changedInputSr ? 'Click on show to send tokens' : <div style={{ marginTop: '.5rem' }}>
+          {['dayswappers', 'liquid'].includes(this.props.type) ?
+          <>
+            Allowance to BatchSendTokens(0x4D...): {this.state.bulkAllowance}
+            <button
+              className="button-liquid"
+              onClick={() => this.sendToMetamask('liquid')}>{this.state.metamaskSending === 'liquid' ? 'Open Metamask...' : 'Send Liquid'}
+            </button>
+          </>: null}
+          {['dayswappers', 'timeally'].includes(this.props.type) ? <button
             className="button-reward"
-            onClick={() => this.sendToMetamask('timeally')}>{this.state.metamaskSending === 'timeally' ? 'Open Metamask...' : 'Send TimeAlly'}</button>
+            onClick={() => this.sendToMetamask('timeally')}>{this.state.metamaskSending === 'timeally' ? 'Open Metamask...' : 'Send TimeAlly'}</button> : null}
           <br />
-        </div>
+        </div>}
       </>
     );
   }
