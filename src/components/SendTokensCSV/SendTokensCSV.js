@@ -5,7 +5,7 @@ const ethers = require('ethers');
 
 class SendTokensCSV extends Component {
   state = {
-    half: true,
+    half: false,
     startSr: '1',
     endSr: String(this.props.addressArray.length),
     startSrNumber: 0,
@@ -74,7 +74,11 @@ class SendTokensCSV extends Component {
         secondTotal = secondTotal.add(amount);
       });
     } else {
-      secondTotal = firstTotal.div(2);
+      if(this.state.half) {
+        secondTotal = firstTotal.div(2);
+      } else {
+        secondTotal = firstTotal;
+      }
     }
 
     let nothingToShow = false;
@@ -149,17 +153,27 @@ class SendTokensCSV extends Component {
     // ).send({from: window.userAddress});
 
     if(type === 'liquid') {
-      window.tx = window.batchInstance.sendTokensByDifferentAmount(
-        window.esInstance.address,
-        sendingAddressesFinal,
-        tokenArrayFinal,
-        sum
-      );
+      try {
+        window.tx = window.batchInstance.sendTokensByDifferentAmount(
+          window.esInstance.address,
+          sendingAddressesFinal,
+          tokenArrayFinal,
+          sum
+        );
+      } catch(err) {
+        console.log(err.message);
+        alert(err.message);
+      }
     } else {
-      window.tx = window.timeallyInstance.functions.giveLaunchReward(
-        sendingAddressesFinal,
-        tokenArrayFinal
-      );
+      try {
+        window.tx = window.timeallyInstance.functions.giveLaunchReward(
+          sendingAddressesFinal,
+          tokenArrayFinal
+        );
+      } catch(err) {
+        console.log(err.message);
+        alert(err.message);
+      }
     }
     this.setState({ metamaskSending: '' });
   };
