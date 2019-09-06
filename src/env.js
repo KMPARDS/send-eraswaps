@@ -6,6 +6,7 @@ const env = {
   network:
           // 'homestead',
             'kovan',
+  deployer: '0xC8e1F3B9a0CdFceF9fFd2343B943989A22517b26',
   esContract: {
     address: '0x53E750ee41c562C171D65Bcb51405b16a56cF676',
     abi: eraSwapTokenJSON.abi
@@ -25,6 +26,7 @@ const env = {
 };
 
 if (env.network === 'homestead') {
+  env.deployer = '0x2b765725f12bbd98991f06abe65486bc841e6ba3';
   env.esContract.address = '0xef1344bdf80bef3ff4428d8becec3eea4a2cf574';
   env.nrtManager.address = '0x20ee679D73559e4c4B5E3B3042B61bE723828d6C';
   env.timeally.address = '0x5630ee5f247bd6b61991fbb2f117bbeb45990876';

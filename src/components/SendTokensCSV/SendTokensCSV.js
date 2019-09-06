@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './SendTokensCSV.css';
-
+import { deployer } from '../../env';
 const ethers = require('ethers');
 
 class SendTokensCSV extends Component {
@@ -313,7 +313,7 @@ class SendTokensCSV extends Component {
             </button>
           </>: null}
           {['dayswappers', 'timeally'].includes(this.props.type) ?
-          (window.userAddress.toLowerCase() === '0xC8e1F3B9a0CdFceF9fFd2343B943989A22517b26'.toLowerCase() ? <>
+          (window.userAddress.toLowerCase() === deployer.toLowerCase() ? <>
             <p style={{marginBottom: '0'}}>TimeAlly Balance: {this.state.timeallyBalance}</p>
             {this.state.topupScreen && this.state.timeallyBalance !== 'Checking...'
             ? <>
