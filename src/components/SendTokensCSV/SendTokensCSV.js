@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import './SendTokensCSV.css';
 import { deployer } from '../../env';
 const ethers = require('ethers');
+console.log('deployer', deployer);
+const COLOR_DAYSWAPPERS = '#f27676';
+const COLOR_LIQUID = '#4ec0db';
+const COLOR_TIMEALLY = '#da8adf';
+const COLOR_SIP = '#dfa594';
 
 class SendTokensCSV extends Component {
   state = {
@@ -20,8 +25,11 @@ class SendTokensCSV extends Component {
     approveScreen: false,
     userApproveTxAmount: {},
     timeallyBalance: 'Checking...',
+    sipBalance: 'Checking...',
     topupScreen: false,
-    userTopupAmount: {}
+    userTopupAmount: {},
+    userSIPPrepaidAmount: {},
+    topupSIPScreen: false,
   };
 
   componentDidMount = async() => {
@@ -29,7 +37,7 @@ class SendTokensCSV extends Component {
     window.soham = this.props;
     await this.showTheseEntries(true);
 
-    (async() => {
+    const f1 = async() => {
       const bulkAllowance = await window.esInstance.functions.allowance(
           window.userAddress,
           window.batchInstance.address
@@ -42,9 +50,11 @@ class SendTokensCSV extends Component {
             : ethers.utils.parseEther(this.state.secondTotal.split(' ')[0])
         )
       });
-    })();
+    };
+    f1();
+    setInterval(f1, 5000);
 
-    (async() => {
+    const f2 = async() => {
       const timeallyBalance = await window.timeallyInstance.functions.launchReward(
         window.userAddress
       );
@@ -54,7 +64,23 @@ class SendTokensCSV extends Component {
           ethers.utils.parseEther(this.state.secondTotal.split(' ')[0])
         )
       });
-    })();
+    };
+    f2();
+    setInterval(f2, 5000);
+
+    const f3 = async() => {
+      const sipBalance = await window.sipInstance.functions.prepaidES(
+        window.userAddress
+      );
+      this.setState({
+        sipBalance: ethers.utils.formatEther(sipBalance) + ' ES',
+        topupSIPScreen: sipBalance.lt(
+          ethers.utils.parseEther(this.state.secondTotal.split(' ')[0])
+        )
+      });
+    };
+    f3();
+    setInterval(f3, 5000);
   };
 
   showTheseEntries = async(onlyShow) => {
@@ -93,7 +119,10 @@ class SendTokensCSV extends Component {
         .lt(this.props.type === 'dayswappers' ? firstTotal : secondTotal),
       topupScreen: ethers.utils.parseEther(
         this.state.timeallyBalance === 'Checking...' ? '0' : this.state.timeallyBalance.split(' ')[0]
-      ).lt(secondTotal)
+      ).lt(secondTotal),
+      topupSIPScreen: ethers.utils.parseEther(
+        this.state.sipBalance === 'Checking...' ? '0' : this.state.sipBalance.split(' ')[0]
+      ).lt(secondTotal),
     });
   };
 
@@ -152,38 +181,73 @@ class SendTokensCSV extends Component {
     //   sum
     // ).send({from: window.userAddress});
 
-    if(type === 'liquid') {
-      try {
-        window.tx = window.batchInstance.sendTokensByDifferentAmount(
-          window.esInstance.address,
-          sendingAddressesFinal,
-          tokenArrayFinal,
-          sum
-        );
-      } catch(err) {
-        console.log(err.message);
-        alert(err.message);
-      }
-    } else {
-      try {
-        window.tx = window.timeallyInstance.functions.giveLaunchReward(
-          sendingAddressesFinal,
-          tokenArrayFinal
-        );
-      } catch(err) {
-        console.log(err.message);
-        alert(err.message);
-      }
+    switch(type) {
+      case 'liquid':
+        try {
+          window.tx = window.batchInstance.sendTokensByDifferentAmount(
+            window.esInstance.address,
+            sendingAddressesFinal,
+            tokenArrayFinal,
+            sum
+          );
+        } catch(err) {
+          console.log(err.message);
+          alert(err.message);
+        }
+        break;
+      case 'rewards':
+        try {
+          window.tx = window.timeallyInstance.functions.giveLaunchReward(
+            sendingAddressesFinal,
+            tokenArrayFinal
+          );
+        } catch(err) {
+          console.log(err.message);
+          alert(err.message);
+        }
+        break;
+      case 'sip':
+        try {
+          window.tx = window.sipInstance.functions.sendPrepaidESDifferent(
+            sendingAddressesFinal,
+            tokenArrayFinal
+          );
+        } catch(err) {
+          console.log(err.message);
+          alert(err.message);
+        }
+        break;
+      default:
+        console.log('unknown type', type);
     }
+
     this.setState({ metamaskSending: '' });
   };
 
   render = () => {
-    const themeColor = this.props.type === 'dayswappers'
-      ? '#f27676'
-      : (this.props.type === 'timeally' ? '#da8adf' : '#4ec0db');
-    const colorLiquid = '#4ec0db';
-    const colorTimeAlly = '#da8adf';
+    let headingText = '';
+    let themeColor = '';
+    switch (this.props.type) {
+      case 'dayswappers':
+        headingText = 'DaySwapper Payouts';
+        themeColor = COLOR_DAYSWAPPERS;
+        break;
+      case 'timeally':
+        headingText = 'TimeAlly Rewards';
+        themeColor = COLOR_TIMEALLY;
+        break;
+      case 'liquid':
+        headingText = 'Liquid Tokens';
+        themeColor = COLOR_LIQUID;
+        break;
+      case 'sip':
+        headingText = 'Assurance SIPs';
+        themeColor = COLOR_SIP;
+        break;
+      default:
+        headingText = 'couldn\'t recognize props.type';
+        break;
+    }
 
     return (
       <>
@@ -192,10 +256,7 @@ class SendTokensCSV extends Component {
             style={{backgroundColor: themeColor+'55', cursor: 'pointer'}}
             onClick={this.props.goBackFunction}>{'< '}Back</span>
             {' '}
-          Send {this.props.type !== 'dayswappers' ?
-            (this.props.type === 'timeally' ? 'TimeAlly Rewards' : 'Liquid Tokens')
-            : 'DaySwapper Payouts'
-          }
+          Send {headingText}
             {' '}
           <span style={{color: '#fff1', backgroundColor: themeColor+'11', cursor: 'default'}}>Forw{' >'}</span>
         </h3>
@@ -220,6 +281,7 @@ class SendTokensCSV extends Component {
             <tr>
               <th>Sr</th>
               <th>Address</th>
+              <th>Check</th>
               <th>{this.props.type !== 'dayswappers' ? 'Tokens In CSV' : 'Liquid Tokens'}</th>
               <th>{this.props.type !== 'dayswappers' ? 'Tokens To Send' : 'TimeAlly Rewards'}</th>
             </tr>
@@ -231,14 +293,36 @@ class SendTokensCSV extends Component {
               <tr key={'row-'+address} className="send-tokens-row">
                 <td className="send-tokens-cell" style={{textAlign: 'right', backgroundColor: '#fff1'}}>{index+(this.state.startSrNumber||1)}</td>
                 <td className="send-tokens-cell">{address}</td>
+                <td style={{cursor:'pointer', backgroundColor:'#fff3', borderRadius:'.5rem'}} onClick={async() => {
+                  let balance = '';
+                  let key = '';
+                  switch(this.props.type) {
+                    case 'liquid':
+                      key = 'Liquid'
+                      balance = await window.esInstance.functions.balanceOf(address);
+                      break;
+                    case 'timeally':
+                      key = 'TimeAlly'
+                      balance = await window.timeallyInstance.functions.launchReward(address);
+                      break;
+                    case 'sip':
+                      key = 'PrepaidES'
+                      balance = await window.sipInstance.functions.prepaidES(address);
+                      break;
+                    default:
+                      balance = `${this.props.type} is not suppported`;
+                      break
+                  }
+                  alert(`${this.props.type}: ${ethers.utils.formatEther(balance)} ES`);
+                }}>Balance</td>
                 <td className="send-tokens-cell" style={{
                   textAlign: 'right',
-                  backgroundColor: this.props.type === 'dayswappers' ? colorLiquid + '44' : undefined
+                  backgroundColor: this.props.type === 'dayswappers' ? COLOR_LIQUID + '44' : undefined
                 }}>{ethers.utils.formatEther(this.props.amountArray[index+(this.state.startSrNumber||1)-1])} ES</td>
                 <td className="send-tokens-cell" style={{
                   textAlign: 'right',
                   backgroundColor: this.props.type === 'dayswappers'
-                  ? colorTimeAlly + '44' : themeColor + '44'}}>{ethers.utils.formatEther(
+                  ? COLOR_TIMEALLY + '44' : themeColor + '44'}}>{ethers.utils.formatEther(
                     this.props.type !== 'dayswappers'
                     ? (this.state.half
                       ? this.props.amountArray[index+(this.state.startSrNumber||1)-1].div(2)
@@ -262,10 +346,10 @@ class SendTokensCSV extends Component {
                   <td className="send-tokens-cell">{address}</td>
                   <td className="send-tokens-cell" style={{
                     textAlign: 'right',
-                    backgroundColor: this.props.type === 'dayswappers' ? colorLiquid + '44' : undefined
+                    backgroundColor: this.props.type === 'dayswappers' ? COLOR_LIQUID + '44' : undefined
                   }}>{ethers.utils.formatEther(this.props.amountArray[actualIndex])} ES</td>
                   <td className="send-tokens-cell" style={{textAlign: 'right', backgroundColor: this.props.type === 'dayswappers'
-                  ? colorTimeAlly + '44' : themeColor + '44'}}>{ethers.utils.formatEther(
+                  ? COLOR_TIMEALLY + '44' : themeColor + '44'}}>{ethers.utils.formatEther(
                     this.props.type !== 'dayswappers'
                     ? (this.state.half
                       ? this.props.amountArray[actualIndex].div(2)
@@ -279,10 +363,10 @@ class SendTokensCSV extends Component {
             <tr>
               <td></td>
               <td></td>
-              <td style={{ textAlign: 'right', backgroundColor: this.props.type === 'dayswappers' ? colorLiquid + '66' : undefined
+              <td style={{ textAlign: 'right', backgroundColor: this.props.type === 'dayswappers' ? COLOR_LIQUID + '66' : undefined
               }}>{this.state.firstTotal}</td>
               <td style={{textAlign: 'right', backgroundColor: this.props.type === 'dayswappers'
-              ? colorTimeAlly + '66' : themeColor + '66'}}>{this.state.secondTotal}</td>
+              ? COLOR_TIMEALLY + '66' : themeColor + '66'}}>{this.state.secondTotal}</td>
             </tr>
           </tbody>
         </table>
@@ -325,7 +409,7 @@ class SendTokensCSV extends Component {
             >
               {this.state.metamaskSending === 'liquid' ? 'Open Metamask...' : 'Send Liquid'}
             </button>
-          </>: null}
+          </> : null}
           {['dayswappers', 'timeally'].includes(this.props.type) ?
           (window.userAddress.toLowerCase() === deployer.toLowerCase() ? <>
             <p style={{marginBottom: '0'}}>TimeAlly Balance: {this.state.timeallyBalance}</p>
@@ -367,6 +451,46 @@ class SendTokensCSV extends Component {
               {this.state.metamaskSending === 'timeally' ? 'Open Metamask...' : 'Send TimeAlly'}
             </button>
           </> : 'Current Metamask address is not deployer of TimeAlly') : null}
+          {this.props.type === 'sip' ? <>
+            <p style={{marginBottom: '0'}}>SIP Balance: {this.state.sipBalance}</p>
+            {this.state.topupSIPScreen && this.state.sipBalance !== 'Checking...'
+            ? <>
+              <input type="text" onKeyUp={event => this.setState({ userSIPPrepaidAmount: event.target.value })} placeholder="Enter ES for SIP prepaid" />
+              <button onClick={async() => {
+                console.log('sip allowance started...');
+                const tx = await window.esInstance.functions.approve(
+                  window.sipInstance.address,
+                  ethers.utils.parseEther(this.state.userSIPPrepaidAmount)
+                );
+                await tx.wait();
+                console.log('sip allowance done');
+              }}>
+                Approve SIP Contract
+              </button>
+              <button onClick={async() => {
+                const tx = await window.sipInstance.functions.addToPrepaid(
+                  ethers.utils.parseEther(this.state.userSIPPrepaidAmount)
+                );
+                await tx.wait();
+                //update allowance
+                this.setState({sipBalance: 'Checking...'});
+                const sipBalance = await window.sipInstance.functions.prepaidES(
+                    window.userAddress
+                  );
+                this.setState({sipBalance: ethers.utils.formatEther(sipBalance) + ' ES'});
+              }}>
+                Topup SIP PrepaidES Balance
+              </button>
+            </> : null}
+            <br />
+            <button
+              className="button-sip"
+              style={{margin: '20px'}}
+              onClick={() => this.sendToMetamask('sip')}
+            >
+              {this.state.metamaskSending === 'sip' ? 'Open Metamask...' : 'Send SIP'}
+            </button>
+          </> : null}
           <br />
         </div>}
       </>

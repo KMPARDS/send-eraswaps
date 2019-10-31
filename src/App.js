@@ -7,7 +7,7 @@ import './App.css';
 const ethers = require('ethers');
 window.Web3js = require('web3');
 
-const { esContract, timeally, batchSendTokens } = require('./env');
+const { esContract, timeally, batchSendTokens, sip } = require('./env');
 
 window.pleaseStopFor = duration => new Promise(function(resolve, reject) {
   setTimeout(() => resolve(), duration);
@@ -63,13 +63,21 @@ class App extends Component {
         window.wallet
       );
       // new window.web3js.eth.Contract(batchSendTokens.abi, batchSendTokens.address);
+
+      window.sipInstance =
+      new ethers.Contract(
+        sip.address,
+        sip.abi,
+        window.wallet
+      );
+
       console.log('Contract instances created');
 
       setInterval(async() => {
         const accounts = await window.web3js.eth.getAccounts();
         window.userAddress = accounts[0];
       }, 2000);
-      
+
       console.log('Done');
     } else {
       console.log('Metamask is not there');
@@ -170,6 +178,7 @@ class App extends Component {
             <h4>What do you want to do with this file?</h4>
             <button className="button-reward" onClick={() => this.setState({ currentScreen: 1 })}>Hey there, I want to send TimeAlly rewards</button>
             <button className="button-liquid" onClick={() => this.setState({ currentScreen: 2 })}>Nope, I feel like sending liquid tokens</button>
+            <button className="button-sip" onClick={() => this.setState({ currentScreen: 4 })}>Instead, I have an urge to send prepaidES in SIPs</button>
           </> : null}
         </> : null}
         {this.state.currentScreen === 1 ?
@@ -194,6 +203,14 @@ class App extends Component {
             addressArray={this.state.addressArray}
             amountArray={this.state.liquidArray}
             stakeArray={this.state.stakeArray}
+            goBackFunction={() => this.setState({ currentScreen: 0 })}
+            />
+          : null}
+        {this.state.currentScreen === 4 ?
+          <SendTokensCSV
+            type="sip"
+            addressArray={this.state.addressArray}
+            amountArray={this.state.amountArray}
             goBackFunction={() => this.setState({ currentScreen: 0 })}
             />
           : null}
