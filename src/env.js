@@ -5,8 +5,8 @@ const sipJSON = require('./ethereum/compiledContracts/TimeAllySIP_TimeAllySIP.js
 
 const env = {
   network:
-          // 'homestead',
-            'kovan',
+          'homestead',
+            // 'kovan',
   deployer: '0xC8e1F3B9a0CdFceF9fFd2343B943989A22517b26',
   esContract: {
     address: '0x53E750ee41c562C171D65Bcb51405b16a56cF676',
