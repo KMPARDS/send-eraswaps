@@ -195,7 +195,7 @@ class SendTokensCSV extends Component {
           alert(err.message);
         }
         break;
-      case 'rewards':
+      case 'timeally':
         try {
           window.tx = window.timeallyInstance.functions.giveLaunchReward(
             sendingAddressesFinal,
