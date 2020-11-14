@@ -36,7 +36,7 @@ class App extends Component {
       await window.ethereum.enable();
       console.log('Metamask is enabled');
       console.log(window.web3js);
-      window.provider = new ethers.providers.Web3Provider(window.web3.currentProvider);
+      window.provider = new ethers.providers.Web3Provider(window.web3js.currentProvider);
       console.log('provider', window.provider)
       window.wallet = window.provider.getSigner();
       // console.log(wiwallet);
