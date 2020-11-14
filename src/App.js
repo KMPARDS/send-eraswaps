@@ -120,31 +120,31 @@ class App extends Component {
     this.setState({ showWhatToDo: true });
   };
 
-  onDayswappersClick = async() => {
-    this.setState({ loadingFromDaySwappers: true });
-    const response = await axios.get('https://apis.dayswappers.com/graph/rewards');
-    console.log('dayswappers response', response);
-    const addressArray = [], liquidArray = [], stakeArray = [];
-    response.data.forEach(obj => {
-      if(obj.liquid_reward || obj.my_reward) {
-        // console.log(obj.liquid_reward, String(obj.liquid_reward));
-        const indexOf = addressArray.indexOf(obj.ethereum_address);
-        if(indexOf === -1) {
-          addressArray.push(obj.ethereum_address);
-          liquidArray.push(ethers.utils.parseEther(String(obj.liquid_reward)));
-          stakeArray.push(ethers.utils.parseEther(String(obj.my_reward)));
-        } else {
-          liquidArray[indexOf] = liquidArray[indexOf].add(obj.liquid_reward);
-          stakeArray[indexOf] = stakeArray[indexOf].add(obj.my_reward);
-        }
-      }
-    });
-    this.setState({
-      loadingFromDaySwappers: false,
-      currentScreen: 3,
-      addressArray, liquidArray, stakeArray
-    });
-  }
+  // onDayswappersClick = async() => {
+  //   this.setState({ loadingFromDaySwappers: true });
+  //   const response = await axios.get('https://apis.dayswappers.com/graph/rewards');
+  //   console.log('dayswappers response', response);
+  //   const addressArray = [], liquidArray = [], stakeArray = [];
+  //   response.data.forEach(obj => {
+  //     if(obj.liquid_reward || obj.my_reward) {
+  //       // console.log(obj.liquid_reward, String(obj.liquid_reward));
+  //       const indexOf = addressArray.indexOf(obj.ethereum_address);
+  //       if(indexOf === -1) {
+  //         addressArray.push(obj.ethereum_address);
+  //         liquidArray.push(ethers.utils.parseEther(String(obj.liquid_reward)));
+  //         stakeArray.push(ethers.utils.parseEther(String(obj.my_reward)));
+  //       } else {
+  //         liquidArray[indexOf] = liquidArray[indexOf].add(obj.liquid_reward);
+  //         stakeArray[indexOf] = stakeArray[indexOf].add(obj.my_reward);
+  //       }
+  //     }
+  //   });
+  //   this.setState({
+  //     loadingFromDaySwappers: false,
+  //     currentScreen: 3,
+  //     addressArray, liquidArray, stakeArray
+  //   });
+  // }
 
   render = () => (
     <div className="App">
@@ -159,10 +159,10 @@ class App extends Component {
               inputStyle={{display: 'none'}}
               onError={this.handleDarkSideForce}
             />
-            <span style={{margin: '10px'}}>Or</span>
+            {/* <span style={{margin: '10px'}}>Or</span>
             <button className="dayswappers-button"
               disabled={this.state.loadingFromDaySwappers}
-              onClick={this.onDayswappersClick}>{this.state.loadingFromDaySwappers ? 'Loading...' : 'Pull from DaySwappers'}</button>
+              onClick={this.onDayswappersClick}>{this.state.loadingFromDaySwappers ? 'Loading...' : 'Pull from DaySwappers'}</button> */}
 
           </> : (
             !this.state.csvArray.length && this.state.loading ? <>

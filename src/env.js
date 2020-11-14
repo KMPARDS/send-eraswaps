@@ -32,7 +32,7 @@ const env = {
 
 if (env.network === 'homestead') {
   env.deployer = '0x2b765725f12bbd98991f06abe65486bc841e6ba3';
-  env.esContract.address = '0xef1344bdf80bef3ff4428d8becec3eea4a2cf574';
+  env.esContract.address = '0x72108a8CC3254813C6BE2F1b77be53E185abFdD9';
   env.nrtManager.address = '0x20ee679D73559e4c4B5E3B3042B61bE723828d6C';
   env.timeally.address = '0x5630ee5f247bd6b61991fbb2f117bbeb45990876';
   env.batchSendTokens.address = '0x4D35C3c17751c510135B2261F85845CF4366F47a';
