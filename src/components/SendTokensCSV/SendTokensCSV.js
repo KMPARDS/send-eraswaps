@@ -63,7 +63,7 @@ class SendTokensCSV extends Component {
         topupScreen: timeallyBalance.lt(
           ethers.utils.parseEther(this.state.secondTotal.split(' ')[0])
         )
-      });approveScreen
+      });
     };
     f2();
     setInterval(f2, 5000);

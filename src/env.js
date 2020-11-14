@@ -2,10 +2,11 @@ const eraSwapTokenJSON = require('./ethereum/compiledContracts/Eraswap_0.json');
 const nrtManagerJSON = require('./ethereum/compiledContracts/NRTManager_0.json');
 const timeAllyJSON = require('./ethereum/compiledContracts/TimeAlly_0.json');
 const sipJSON = require('./ethereum/compiledContracts/TimeAllySIP_TimeAllySIP.json');
-
+console.log('REACT_APP_NODE_ENV',process.env.REACT_APP_NODE_ENV);
 const env = {
-  network:
-          'homestead',
+  network: 
+    // process.env.REACT_APP_NODE_ENV === 'development' ? 'kovan' :
+   'homestead',
             // 'kovan',
   deployer: '0xC8e1F3B9a0CdFceF9fFd2343B943989A22517b26',
   esContract: {
