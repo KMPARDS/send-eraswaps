@@ -9,7 +9,7 @@ const env = {
             // 'kovan',
   deployer: '0xC8e1F3B9a0CdFceF9fFd2343B943989A22517b26',
   esContract: {
-    address: '0x53E750ee41c562C171D65Bcb51405b16a56cF676',
+    address: '0x72108a8CC3254813C6BE2F1b77be53E185abFdD9',
     abi: eraSwapTokenJSON.abi
   },
   nrtManager: {
